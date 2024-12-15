@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 type Client struct {
@@ -104,4 +105,5 @@ func sendFile(conn net.Conn, filePath string) {
 	}
 
 	conn.Write([]byte{0x1E}) //sending delimiter 0x1E
+	time.Sleep(time.Second)  // sleeping for now but client needs to keep TCP open until server confirms file received
 }

@@ -72,11 +72,10 @@ func (server *Server) HandleConnection(conn net.Conn) {
 }
 
 func receiveFile(server *Server, reader *bufio.Reader) error {
-
 	_, err := reader.ReadBytes(byte(0x1E))
 
 	if err == io.EOF {
-		return err //stream ended
+		return err
 	}
 
 	if err != nil {
@@ -170,9 +169,9 @@ func receiveFile(server *Server, reader *bufio.Reader) error {
 
 		fmt.Printf("Total bytes received: %d\n", bytesReceived)
 
-		if bytesReceived >= fileSize {
-			break
-		}
+		// if bytesReceived >= fileSize {
+		// 	break
+		// }
 	}
 
 	fmt.Printf("File %s received succesfully!\n", fileName)
