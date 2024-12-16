@@ -9,13 +9,18 @@ import (
 
 func main() {
 
-	if len(os.Args) < 2 {
-		log.Fatal("Must provide file as argument")
+	dir := "."
+
+	if len(os.Args) > 1 {
+		dir = os.Args[1]
 	}
 
-	file := os.Args[1]
+	c, err := client.New("127.0.0.1:7007", dir)
 
-	clientInstance := client.New("127.0.0.1:7007")
-	clientInstance.Run(file)
+	if err != nil {
+		log.Fatal("Error starting client: ", err)
+		return
+	}
 
+	c.Run()
 }

@@ -12,28 +12,26 @@ import (
 )
 
 type Server struct {
-	workingDir string
+	Address string
+	Dir     string
 }
 
-func New(workingDir string) (*Server, error) {
-
-	dir, err := os.Stat(workingDir)
+func New(address string, dir string) (*Server, error) {
+	d, err := os.Stat(dir)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if !dir.IsDir() {
+	if !d.IsDir() {
 		return nil, fmt.Errorf("Path must be to directory not a file")
 	}
 
-	return &Server{workingDir: workingDir}, nil
+	return &Server{Address: address, Dir: dir}, nil
 }
 
 func (server *Server) Run() {
-
-	fmt.Println("Starting server...")
-	listener, err := net.Listen("tcp", "0.0.0.0:7007")
+	listener, err := net.Listen("tcp", server.Address)
 
 	if err != nil {
 		log.Fatal(err)
@@ -41,7 +39,7 @@ func (server *Server) Run() {
 
 	defer listener.Close()
 
-	fmt.Println("Listening for connections...")
+	fmt.Printf("Server listening for connections on %s...\n", server.Address)
 
 	for {
 		conn, err := listener.Accept()
@@ -56,7 +54,6 @@ func (server *Server) Run() {
 }
 
 func (server *Server) HandleConnection(conn net.Conn) {
-
 	defer conn.Close()
 
 	reader := bufio.NewReader(conn)
@@ -68,7 +65,6 @@ func (server *Server) HandleConnection(conn net.Conn) {
 			break
 		}
 	}
-
 }
 
 func receiveFile(server *Server, reader *bufio.Reader) error {
@@ -89,10 +85,6 @@ func receiveFile(server *Server, reader *bufio.Reader) error {
 		return err
 	}
 
-	if []byte(fileName)[0] == byte(0x1E) {
-		fmt.Println("WHY THIS HAPPENS?!")
-	}
-
 	fileName = fileName[:len(fileName)-1]
 
 	fileSizeStr, err := reader.ReadString('\n')
@@ -111,7 +103,7 @@ func receiveFile(server *Server, reader *bufio.Reader) error {
 
 	fmt.Printf("Receiving file: %s (%d bytes)\n", fileName, fileSize)
 
-	newFile, err := os.Create(server.workingDir + "/" + fileName)
+	newFile, err := os.Create(server.Dir + "/" + fileName)
 	if err != nil {
 		log.Println("Error creating file: ", err)
 		return err
@@ -120,7 +112,6 @@ func receiveFile(server *Server, reader *bufio.Reader) error {
 	defer newFile.Close()
 
 	buffer := make([]byte, 1024)
-	var bytesReceived int64 = 0
 	var leftOverBytes []byte
 
 	for {
@@ -131,8 +122,6 @@ func receiveFile(server *Server, reader *bufio.Reader) error {
 		}
 
 		n, err := reader.Read(buffer)
-
-		fmt.Printf("Received into buffer: %d\n", n)
 
 		if err == io.EOF {
 			break
@@ -164,14 +153,6 @@ func receiveFile(server *Server, reader *bufio.Reader) error {
 			log.Println("Erro writing to file: ", err)
 			return err
 		}
-
-		bytesReceived += int64(n)
-
-		fmt.Printf("Total bytes received: %d\n", bytesReceived)
-
-		// if bytesReceived >= fileSize {
-		// 	break
-		// }
 	}
 
 	fmt.Printf("File %s received succesfully!\n", fileName)

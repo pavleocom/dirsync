@@ -9,18 +9,18 @@ import (
 
 func main() {
 
-	syncDir := "."
+	dir := "."
 
 	if len(os.Args) > 1 {
-		syncDir = os.Args[1]
+		dir = os.Args[1]
 	}
 
-	serverInstance, err := server.New(syncDir)
+	s, err := server.New("0.0.0.0:7007", dir)
 
 	if err != nil {
 		log.Println("Error starting server: ", err)
 		return
 	}
 
-	serverInstance.Run()
+	s.Run()
 }

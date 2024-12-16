@@ -11,20 +11,30 @@ import (
 
 type Client struct {
 	Address string
+	Dir     string
 }
 
-func New(address string) *Client {
-	return &Client{Address: address}
+func New(address string, dir string) (*Client, error) {
+	d, err := os.Stat(dir)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !d.IsDir() {
+		return nil, fmt.Errorf("Path must be to directory not a file")
+	}
+
+	return &Client{Address: address, Dir: dir}, nil
 }
 
-func (client *Client) Run(dir string) {
-
-	if len(dir) < 1 {
+func (client *Client) Run() {
+	if len(client.Dir) < 1 {
 		log.Println("Error: file path not provided")
 		return
 	}
 
-	entries, err := os.ReadDir(dir)
+	entries, err := os.ReadDir(client.Dir)
 
 	if err != nil {
 		log.Println("Error scanning directory: ", err)
@@ -41,7 +51,7 @@ func (client *Client) Run(dir string) {
 	}
 
 	for _, entry := range entries {
-		filepath := dir + "/" + entry.Name()
+		filepath := client.Dir + "/" + entry.Name()
 
 		if !entry.IsDir() {
 			sendFile(conn, filepath)
