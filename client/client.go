@@ -60,6 +60,41 @@ func (client *Client) Run() {
 	}
 }
 
+func getRelativeFiles(dir string, files []string) []string {
+	for index, file := range files {
+		files[index] = file[len(dir)+1:]
+	}
+
+	return files
+}
+
+func getFiles(dir string) ([]string, error) {
+	var files []string
+
+	entries, err := os.ReadDir(dir)
+
+	if err != nil {
+		log.Println("Error scanning directory: ", err)
+		return nil, err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			childDir := dir + "/" + entry.Name()
+			filesInChildDir, err := getFiles(childDir)
+			if err != nil {
+				return nil, err
+			}
+			files = append(files, filesInChildDir...)
+		} else {
+			file := dir + "/" + entry.Name()
+			files = append(files, file)
+		}
+	}
+
+	return files, nil
+}
+
 func sendFile(conn net.Conn, filePath string) {
 	conn.Write([]byte{0x1E}) //sending delimiter 0x1E
 
